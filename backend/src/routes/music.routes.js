@@ -1,17 +1,19 @@
 const express = require("express");
+const router = express.Router();
 const multer = require("multer");
 const multerS3 = require("multer-s3");
+
 const s3 = require("../config/s3");
 const auth = require("../middleware/authMiddleware");
 const db = require("../config/db");
-
-const router = express.Router();
 
 const upload = multer({
   storage: multerS3({
     s3,
     bucket: process.env.S3_BUCKET_NAME,
-    key: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
+    key: (req, file, cb) => {
+      cb(null, Date.now() + "-" + file.originalname);
+    },
   }),
 });
 
@@ -31,4 +33,4 @@ router.get("/", auth, (req, res) => {
   );
 });
 
-module.exports = router;
+module.exports = router;   // ✅ THIS LINE IS CRITICAL
