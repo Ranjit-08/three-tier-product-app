@@ -1,14 +1,14 @@
-import React from "react";
-import Login from "./components/Login";
-import Dashboard from "./pages/Dashboard";
+import { useState } from "react";
+import ProductList from "./components/ProductList";
+import OrderForm from "./components/OrderForm";
 
-function App() {
+export default function App() {
+  const [product, setProduct] = useState(null);
+
   return (
-    <div>
-      <Login />
-      <Dashboard />
+    <div style={{ padding: 20 }}>
+      <h1>Product Store</h1>
+      {!product ? <ProductList onSelect={setProduct} /> : <OrderForm product={product} />}
     </div>
   );
 }
-
-export default App;
