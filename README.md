@@ -34,6 +34,18 @@ npm install
 
 node server.js
 
+# for background 
+npm install -g pm2
+
+pm2 start server.js --name backend
+
+pm2 status
+pm2 logs backend
+
+pm2 startup
+
+pm2 save
+
 # frontend to backend connection 
 # install git 
 - yum install git -y
