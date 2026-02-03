@@ -62,4 +62,5 @@ npm install
 npm run build
 # Serve Frontend (Simple way)
 npm install -g serve
+
 serve -s build -l 80
