@@ -31,6 +31,7 @@ DB_NAME=productdb
 PORT=5000
 # install npm
 npm install
+
 node server.js
 
 # frontend to backend connection 
