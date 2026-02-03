@@ -64,3 +64,7 @@ npm run build
 npm install -g serve
 
 serve -s build -l 80
+
+pm2 start serve --name frontend -- -s build -l 80
+
+pm2 save
