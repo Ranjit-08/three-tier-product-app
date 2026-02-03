@@ -56,7 +56,9 @@ sudo yum install nodejs -y
 REACT_APP_API_URL=http://<backend-EC2-PUBLIC-IP>:5000
 # Build Frontend
 cd frontend
+
 npm install
+
 npm run build
 # Serve Frontend (Simple way)
 npm install -g serve
