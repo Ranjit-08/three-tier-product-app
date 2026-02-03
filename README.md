@@ -14,7 +14,9 @@ CREATE TABLE products (
 );
 
 # install nodejs 
-curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+
+curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+
 sudo yum install nodejs -y
 # clone backend 
 git clone https://github.com/yourusername/three-tier-product-app.git
