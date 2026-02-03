@@ -4,6 +4,7 @@
   password 
 # inside sql run this to create database 
 CREATE DATABASE productdb;
+
 USE productdb;
 
 CREATE TABLE products (
@@ -20,6 +21,7 @@ curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
 sudo yum install nodejs -y
 # clone backend 
 git clone https://github.com/yourusername/three-tier-product-app.git
+
 cd three-tier-product-app/backend
 # edit .env
 DB_HOST=<RDS-ENDPOINT>
