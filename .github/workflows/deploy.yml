@@ -1,4 +1,4 @@
-name: End-to-End-Automation
+name: CI-CD-Without-Terraform
 
 on:
   push:
@@ -6,19 +6,16 @@ on:
       - main
 
 jobs:
-# =======================
-# JOB 1: TERRAFORM INFRA
-# =======================
-  terraform:
+  deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
-
-    outputs:
-      cluster_name: ${{ steps.tf-output.outputs.cluster_name }}
+    timeout-minutes: 30
 
     steps:
-    - uses: actions/checkout@v4
+    # ---------------- CHECKOUT ----------------
+    - name: Checkout code
+      uses: actions/checkout@v4
 
+    # ---------------- AWS AUTH ----------------
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -26,93 +23,28 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
+    - name: Verify AWS access
+      run: aws sts get-caller-identity
 
-    - name: Terraform Init
-      run: terraform -chdir=terraform init
-
-    - name: Terraform Apply
-      run: terraform -chdir=terraform apply -auto-approve
-      env:
-        TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
-
-    - name: Capture Terraform Output
-      id: tf-output
-      run: |
-        echo "cluster_name=$(terraform -chdir=terraform output -raw cluster_name)" >> $GITHUB_OUTPUT
-
-
-# =======================
-# JOB 2: WAIT FOR EKS
-# =======================
-  wait-for-eks:
-    needs: terraform
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-
-    - name: Wait for EKS cluster to be ACTIVE
-      run: |
-        aws eks wait cluster-active \
-          --name "${{ needs.terraform.outputs.cluster_name }}" \
-          --region ${{ secrets.AWS_REGION }}
-
-
-# =======================
-# JOB 3: BUILD & PUSH DOCKER
-# =======================
-  docker:
-    needs: wait-for-eks
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-    - uses: actions/checkout@v4
-
+    # ---------------- DOCKER ----------------
     - name: Login to DockerHub
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-    - name: Build & Push Backend
+    - name: Build & Push Backend Image
       run: |
         docker build -t ${{ secrets.DOCKER_USERNAME }}/backend:latest backend
         docker push ${{ secrets.DOCKER_USERNAME }}/backend:latest
 
-    - name: Build & Push Frontend
+    - name: Build & Push Frontend Image
       run: |
         docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:latest frontend
         docker push ${{ secrets.DOCKER_USERNAME }}/frontend:latest
 
-
-# =======================
-# JOB 4: DEPLOY TO EKS
-# =======================
-  deploy:
-    needs: docker
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-
+    # ---------------- KUBERNETES ----------------
     - name: Update kubeconfig
       run: |
         aws eks update-kubeconfig \
-          --name "${{ needs.terraform.outputs.cluster_name }}" \
+          --name three-tier-eks \
           --region ${{ secrets.AWS_REGION }}
 
     - name: Deploy Kubernetes manifests
